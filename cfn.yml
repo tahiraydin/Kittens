@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  This template deploys the Kittens  application on an EC2 instance.
+
+Resources:
+  StartEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-01c647eace872fc02
+      InstanceType: t2.micro
+      KeyName: x-pair
+      SecurityGroups:
+        - !Ref EC2InstanceSG
+      Tags:
+        - Key: Name
+          Value: !Sub Taydin ${AWS::StackName}
+      UserData:
+        Fn::Base64: |
+          #! /bin/bash  
+          yum update -y
+          yum install httpd -y
+          FOLDER=“https://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@raw.githubusercontent.com/tahiraydin/Kittens/main/static-web"
+          cd /var/www/html
+          sudo wget ${FOLDER}/index.html
+          sudo wget ${FOLDER}/cat0.jpg
+          sudo wget ${FOLDER}/cat1.jpg
+          sudo wget ${FOLDER}/cat2.jpg
+          sudo wget ${FOLDER}/cat3.png
+          systemctl start httpd
+          systemctl enable httpd
+
+  EC2InstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows HTTP and SSH traffic
+      GroupName: taydinportfolio
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: env
+          Value: dev
+
+Outputs:
+  WebsiteURL:
+    Description: EC2 Web Page displaying information about
+    Value: !Sub
+      - https://${PublicAddress}
+      - PublicAddress: !GetAtt StartEC2Instance.PublicAddress
